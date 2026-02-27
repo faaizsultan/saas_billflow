@@ -21,13 +21,13 @@ const COLORS = ['#2563eb', '#16a34a', '#d97706', '#dc2626', '#9333ea']
 export function DashboardPage() {
     const [selectedCategory, setSelectedCategory] = useState("All")
 
-    const { data: analytics, isLoading: analyticsLoading } = useQuery({
+    const { data: analytics, isLoading: analyticsLoading, isError: analyticsError } = useQuery({
         queryKey: ["analytics"],
         queryFn: fetchAnalytics,
         refetchInterval: 5000 // refresh every 5s for demo
     })
 
-    const { data: traces, isLoading: tracesLoading } = useQuery({
+    const { data: traces, isLoading: tracesLoading, isError: tracesError } = useQuery({
         queryKey: ["traces", selectedCategory],
         queryFn: () => fetchTraces(selectedCategory),
         refetchInterval: 5000
@@ -44,7 +44,7 @@ export function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            {analyticsLoading ? "..." : analytics?.total_traces || 0}
+                            {analyticsError ? "Error" : analyticsLoading ? "..." : analytics?.total_traces || 0}
                         </div>
                     </CardContent>
                 </Card>
@@ -56,7 +56,7 @@ export function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            {analyticsLoading ? "..." : `${analytics?.average_response_time_ms || 0} ms`}
+                            {analyticsError ? "Error" : analyticsLoading ? "..." : `${analytics?.average_response_time_ms || 0} ms`}
                         </div>
                     </CardContent>
                 </Card>
@@ -67,7 +67,9 @@ export function DashboardPage() {
                         <Activity className="h-4 w-4 text-emerald-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-emerald-600">Healthy</div>
+                        <div className={`text-2xl font-bold ${analyticsError ? "text-destructive" : "text-emerald-600"}`}>
+                            {analyticsError ? "Degraded" : "Healthy"}
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -78,7 +80,9 @@ export function DashboardPage() {
                     <CardTitle>Trace Distribution by Category</CardTitle>
                 </CardHeader>
                 <CardContent className="h-[300px]">
-                    {analyticsLoading ? (
+                    {analyticsError ? (
+                        <div className="h-full flex items-center justify-center text-destructive">Failed to load chart data. Ensure backend is running.</div>
+                    ) : analyticsLoading ? (
                         <div className="h-full flex items-center justify-center text-muted-foreground">Loading chart...</div>
                     ) : (
                         <ResponsiveContainer width="100%" height="100%">
@@ -120,7 +124,9 @@ export function DashboardPage() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    {tracesLoading ? (
+                    {tracesError ? (
+                        <div className="py-8 text-center text-destructive">Failed to load traces. Ensure backend is running.</div>
+                    ) : tracesLoading ? (
                         <div className="py-8 text-center text-muted-foreground">Loading traces...</div>
                     ) : (
                         <div className="border rounded-md">
