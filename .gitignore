@@ -1,0 +1,29 @@
+# Python / Django
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+db.sqlite3
+.env
+venv/
+env/
+*.log
+
+# Node / Frontend
+node_modules/
+dist/
+build/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+npm-debug.log*
+
+# OS
+.DS_Store
+
+# SupportLens Specific
+progress.json
+commands.txt
+backend_reasoning.md
+frontend_reasoning.md
