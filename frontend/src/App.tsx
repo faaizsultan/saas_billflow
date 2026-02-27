@@ -2,6 +2,7 @@ import { useState } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MessageSquare, LayoutDashboard } from "lucide-react"
 import { ChatPage } from "./pages/ChatPage"
+import { DashboardPage } from "./pages/DashboardPage"
 
 const queryClient = new QueryClient()
 
@@ -22,8 +23,8 @@ export default function App() {
               <button
                 onClick={() => setView('chat')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${view === 'chat'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'hover:bg-muted text-muted-foreground'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'hover:bg-muted text-muted-foreground'
                   }`}
               >
                 <MessageSquare className="w-4 h-4" />
@@ -32,8 +33,8 @@ export default function App() {
               <button
                 onClick={() => setView('dashboard')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${view === 'dashboard'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'hover:bg-muted text-muted-foreground'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'hover:bg-muted text-muted-foreground'
                   }`}
               >
                 <LayoutDashboard className="w-4 h-4" />
@@ -48,9 +49,7 @@ export default function App() {
           {view === 'chat' ? (
             <ChatPage />
           ) : (
-            <div className="container mx-auto text-center py-20 text-muted-foreground">
-              Dashboard coming in Phase 8...
-            </div>
+            <DashboardPage />
           )}
         </main>
       </div>
