@@ -4,7 +4,11 @@ import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
 
+CHATBOT_SYSTEM_PROMPT = settings.CHATBOT_SYSTEM_PROMPT
+
+CLASSIFICATION_PROMPT = settings.CLASSIFICATION_PROMPT
 # System prompt for the chatbot
+<<<<<<< Updated upstream
 CHATBOT_SYSTEM_PROMPT = """You are a friendly and helpful customer support agent for BillFlow, a SaaS billing platform.
 Answer clearly and professionally."""
 
@@ -21,6 +25,8 @@ Bot Response: {bot_response}
 
 You must return ONLY the exact string from the 5 options above, with absolutely no other text, markdown, or punctuation."""
 
+=======
+>>>>>>> Stashed changes
 
 def get_gemini_client():
     """Initializes the Gemini client if the API key is present."""

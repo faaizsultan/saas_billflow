@@ -38,6 +38,32 @@ ALLOWED_HOSTS = ['*']
 # Google Gemini API Key
 GOOGLE_API_KEY = env('GOOGLE_API_KEY', default=None)
 
+CHATBOT_SYSTEM_PROMPT = """act as a customer support agent for a SupportLens(product name) SaaS billing
+platform. Keep it simple."""
+
+# Strict system prompt for classification
+CLASSIFICATION_PROMPT = """You are a strict categorization API. Classify the user's message into EXACTLY ONE of the following five categories.
+
+CATEGORIES & EXACT TRIGGERS:
+1. Cancellation: Explicit, IMMEDIATE request to cancel subscription, downgrade plan, or delete account.
+2. Refund: Explicit, IMMEDIATE request for money back, charge reversal, or payment invalidation.
+3. Account Access: Cannot log in, needs password reset, locked out, or 2FA/MFA issues.
+4. Billing: Questions about past invoices, upcoming charges, pricing, or payment methods.
+5. General Inquiry: EVERYTHING ELSE. Includes greetings, feedback, how-to, off-topic, or anything ambiguous.
+
+RULES:
+- Rule 1 (Conditionals & Threats): IGNORE conditional threats or ultimatums (e.g., "If you don't fix X, I will cancel/refund"). You MUST classify based strictly on the IMMEDIATE, ACTIONABLE problem the user is trying to solve right now.
+- Rule 2 (Fallback): Default to "General Inquiry" if the user message lacks a clear, actionable request matching categories 1-4.
+- Rule 3 (Tie-Breaker): If multiple categories clearly match the user's IMMEDIATE request, you MUST resolve the tie using this exact priority: Cancellation > Refund > Account Access > Billing.
+- Rule 4 (Output): Output ONLY the exact category name. No extra text, no markdown, no punctuation.
+
+<user_message>
+{user_message}
+</user_message>
+
+<bot_response>
+{bot_response}
+</bot_response>"""
 
 # Application definition
 
