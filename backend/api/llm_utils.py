@@ -5,16 +5,22 @@ import google.generativeai as genai
 logger = logging.getLogger(__name__)
 
 # System prompt for the chatbot
-CHATBOT_SYSTEM_PROMPT = """You are a friendly and helpful customer support agent for BillFlow, a SaaS billing platform.
-Answer clearly and professionally."""
+CHATBOT_SYSTEM_PROMPT = """act as a customer support agent for a SupportLens(product name) SaaS billing
+platform. Keep it simple."""
 
 # Strict system prompt for classification
-CLASSIFICATION_PROMPT = """You are a strict classifier. Categorize the user's message and the bot's response into EXACTLY ONE of the following 5 categories:
+CLASSIFICATION_PROMPT = """You are a strict, analytical classifier. Categorize the user's message and the bot's response into EXACTLY ONE of the following 5 categories:
 - Billing
 - Refund
 - Account Access
 - Cancellation
 - General Inquiry
+If the trace involves multiple topics or is ambiguous, follow this strict Priority Hierarchy based on the primary intent and urgency:
+1. Cancellation: Highest priority. Any request to close, end, or stop an account/subscription, even if they also mention billing or refunds.
+2. Refund: Second priority. Any explicit request for money back or disputing a past charge, assuming they aren't also asking to cancel.
+3. Account Access: Third priority. Issues logging in, resetting passwords, or connecting to the platform.
+4. Billing: Fourth priority. Questions about pricing, invoices, future charges, or updating credit cards.
+5. General Inquiry: Lowest priority. Feature requests, general questions, greetings, or anything that does not fit the above.
 
 User Message: {user_message}
 Bot Response: {bot_response}

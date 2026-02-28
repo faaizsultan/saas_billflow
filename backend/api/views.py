@@ -26,19 +26,11 @@ class TraceViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.Gene
         serializer.is_valid(raise_exception=True)
         
         user_message = serializer.validated_data['user_message']
+        bot_response = serializer.validated_data['bot_response']
+        response_time_ms = serializer.validated_data.get('response_time_ms', 0)
         
-        start_time = time.time()
-        
-        # 1. Generate bot response
-        bot_response = generate_chat_response(user_message)
-        
-        # 2. Classify trace
         category = classify_trace(user_message, bot_response)
         
-        end_time = time.time()
-        response_time_ms = int((end_time - start_time) * 1000)
-        
-        # 3. Save Trace
         trace = Trace.objects.create(
             user_message=user_message,
             bot_response=bot_response,
@@ -48,6 +40,23 @@ class TraceViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.Gene
         
         response_serializer = TraceSerializer(trace)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+class ChatView(views.APIView):
+    def post(self, request, *args, **kwargs):
+        user_message = request.data.get('user_message')
+        if not user_message:
+            return Response({'error': 'user_message is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        start_time = time.time()
+        bot_response = generate_chat_response(user_message)
+        end_time = time.time()
+        
+        response_time_ms = int((end_time - start_time) * 1000)
+        
+        return Response({
+            'bot_response': bot_response,
+            'response_time_ms': response_time_ms
+        })
 
 class AnalyticsView(views.APIView):
     def get(self, request, *args, **kwargs):

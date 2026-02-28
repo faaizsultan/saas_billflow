@@ -107,14 +107,12 @@ class TraceAPITest(APITestCase):
         self.assertEqual(response.data[0]['category'], 'Refund')
 
     @patch('api.views.classify_trace')
-    @patch('api.views.generate_chat_response')
-    def test_create_trace_success(self, mock_generate, mock_classify):
+    def test_create_trace_success(self, mock_classify):
         """Test successfully creating a trace via POST"""
-        mock_generate.return_value = "Mocked API bot response."
         mock_classify.return_value = "Cancellation"
         
         url = reverse('trace-list')
-        data = {'user_message': 'Cancel my account please'}
+        data = {'user_message': 'Cancel my account please', 'bot_response': 'Mocked API bot response.'}
         
         response = self.client.post(url, data, format='json')
         
@@ -124,11 +122,24 @@ class TraceAPITest(APITestCase):
         self.assertEqual(response.data['bot_response'], 'Mocked API bot response.')
         self.assertTrue('response_time_ms' in response.data)
         self.assertEqual(Trace.objects.count(), 3)
+        
+    @patch('api.views.generate_chat_response')
+    def test_chat_generation_success(self, mock_generate):
+        """Test the new standalone chat endpoint"""
+        mock_generate.return_value = "This is from the chat endpoint."
+        
+        url = reverse('chat')
+        data = {'user_message': 'Hello bot'}
+        
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['bot_response'], "This is from the chat endpoint.")
+        self.assertTrue('response_time_ms' in response.data)
 
     def test_create_trace_bad_request(self):
-        """Test creating a trace without user_message"""
+        """Test creating a trace without bot_response"""
         url = reverse('trace-list')
-        data = {} # Missing user_message
+        data = {'user_message': 'hello'} # Missing bot_response
         
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

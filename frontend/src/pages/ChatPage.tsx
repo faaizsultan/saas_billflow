@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import { createTrace } from "@/api/client"
+import { createTrace, generateChat } from "@/api/client"
 
 interface ChatMessage {
     id: string
@@ -33,7 +33,10 @@ export function ChatPage() {
     }, [messages])
 
     const mutation = useMutation({
-        mutationFn: createTrace,
+        mutationFn: async (userMsg: string) => {
+            const chatResponse = await generateChat(userMsg)
+            return await createTrace(userMsg, chatResponse.bot_response, chatResponse.response_time_ms)
+        },
         onSuccess: (data) => {
             setMessages((prev) => [
                 ...prev,

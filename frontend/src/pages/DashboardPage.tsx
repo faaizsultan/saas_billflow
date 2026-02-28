@@ -1,4 +1,4 @@
-import { useState } from "react"
+import React, { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import { Activity, Clock, Layers } from "lucide-react"
@@ -16,10 +16,18 @@ import { Badge } from "@/components/ui/badge"
 import { fetchAnalytics, fetchTraces } from "@/api/client"
 
 const CATEGORIES = ["All", "Billing", "Refund", "Account Access", "Cancellation", "General Inquiry"]
-const COLORS = ['#2563eb', '#16a34a', '#d97706', '#dc2626', '#9333ea']
+const CATEGORY_COLORS: Record<string, string> = {
+    "Billing": "#2563eb",
+    "Refund": "#16a34a",
+    "Account Access": "#d97706",
+    "Cancellation": "#dc2626",
+    "General Inquiry": "#9333ea",
+}
+const getCategoryColor = (cat: string) => CATEGORY_COLORS[cat] || "#888888"
 
 export function DashboardPage() {
     const [selectedCategory, setSelectedCategory] = useState("All")
+    const [expandedRow, setExpandedRow] = useState<string | null>(null)
 
     const { data: analytics, isLoading: analyticsLoading, isError: analyticsError } = useQuery({
         queryKey: ["analytics"],
@@ -96,7 +104,7 @@ export function DashboardPage() {
                                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                                     {
                                         (analytics?.category_breakdown || []).map((_, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            <Cell key={`cell-${index}`} fill={getCategoryColor((analytics?.category_breakdown || [])[index].category)} />
                                         ))
                                     }
                                 </Bar>
@@ -135,7 +143,8 @@ export function DashboardPage() {
                                     <TableRow>
                                         <TableHead className="w-[180px]">Timestamp</TableHead>
                                         <TableHead>Category</TableHead>
-                                        <TableHead className="max-w-[300px]">User Message</TableHead>
+                                        <TableHead className="max-w-[200px]">User Message</TableHead>
+                                        <TableHead className="max-w-[200px]">Bot Response</TableHead>
                                         <TableHead className="text-right">Latency (ms)</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -148,22 +157,43 @@ export function DashboardPage() {
                                         </TableRow>
                                     ) : (
                                         traces?.slice(0, 15).map((trace) => ( // Show only top 15 in this view to avoid massive scrolling
-                                            <TableRow key={trace.id}>
-                                                <TableCell className="font-medium">
-                                                    {new Date(trace.timestamp).toLocaleString()}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge variant="outline" className="bg-primary/5">
-                                                        {trace.category}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="max-w-[300px] truncate text-muted-foreground" title={trace.user_message}>
-                                                    {trace.user_message}
-                                                </TableCell>
-                                                <TableCell className="text-right font-mono">
-                                                    {trace.response_time_ms}
-                                                </TableCell>
-                                            </TableRow>
+                                            <React.Fragment key={trace.id}>
+                                                <TableRow className="cursor-pointer hover:bg-muted/50" onClick={() => setExpandedRow(prev => prev === trace.id ? null : trace.id)}>
+                                                    <TableCell className="font-medium">
+                                                        {new Date(trace.timestamp).toLocaleString()}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge variant="outline" style={{ backgroundColor: getCategoryColor(trace.category), color: 'white', borderColor: getCategoryColor(trace.category) }}>
+                                                            {trace.category}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="max-w-[200px] truncate text-muted-foreground" title={trace.user_message}>
+                                                        {trace.user_message}
+                                                    </TableCell>
+                                                    <TableCell className="max-w-[200px] truncate text-muted-foreground" title={trace.bot_response}>
+                                                        {trace.bot_response}
+                                                    </TableCell>
+                                                    <TableCell className="text-right font-mono">
+                                                        {trace.response_time_ms}
+                                                    </TableCell>
+                                                </TableRow>
+                                                {expandedRow === trace.id && (
+                                                    <TableRow className="bg-muted/10">
+                                                        <TableCell colSpan={5}>
+                                                            <div className="p-4 space-y-4 text-sm animate-in fade-in duration-200">
+                                                                <div>
+                                                                    <span className="font-semibold text-primary">User Message:</span>
+                                                                    <p className="mt-1 text-foreground bg-background p-3 rounded-md border shadow-sm">{trace.user_message}</p>
+                                                                </div>
+                                                                <div>
+                                                                    <span className="font-semibold text-emerald-600">Bot Response:</span>
+                                                                    <p className="mt-1 text-foreground bg-background p-3 rounded-md border shadow-sm whitespace-pre-wrap">{trace.bot_response}</p>
+                                                                </div>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )}
+                                            </React.Fragment>
                                         ))
                                     )}
                                 </TableBody>

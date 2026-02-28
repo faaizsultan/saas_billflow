@@ -9,3 +9,5 @@ class TraceSerializer(serializers.ModelSerializer):
 
 class TraceCreateSerializer(serializers.Serializer):
     user_message = serializers.CharField(required=True)
+    bot_response = serializers.CharField(required=True)
+    response_time_ms = serializers.IntegerField(required=False, default=0)
