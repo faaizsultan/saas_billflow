@@ -16,8 +16,13 @@ export interface Trace {
     response_time_ms: number;
 }
 
-export const createTrace = async (user_message: string): Promise<Trace> => {
-    const { data } = await apiClient.post<Trace>('/traces/', { user_message });
+export const generateChat = async (user_message: string): Promise<{ bot_response: string, response_time_ms: number }> => {
+    const { data } = await apiClient.post<{ bot_response: string, response_time_ms: number }>('/chat/', { user_message });
+    return data;
+};
+
+export const createTrace = async (user_message: string, bot_response: string, response_time_ms?: number): Promise<Trace> => {
+    const { data } = await apiClient.post<Trace>('/traces/', { user_message, bot_response, response_time_ms });
     return data;
 };
 
