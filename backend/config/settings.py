@@ -35,6 +35,9 @@ DEBUG = env('DEBUG', default=False)
 
 ALLOWED_HOSTS = ['*']
 
+# Google Gemini API Key
+GOOGLE_API_KEY = env('GOOGLE_API_KEY', default=None)
+
 
 # Application definition
 
