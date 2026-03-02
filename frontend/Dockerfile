@@ -9,9 +9,7 @@ RUN npm install
 # Copy project files
 COPY . .
 
-# Pass VITE_API_URL if necessary for build, but typically dynamic paths are better. Wait, Vite expects VITE_API_URL at build time if it's baked into static files.
-# However, usually we can use relative paths like '/api' in production. 
-# Let's assume we can pass it or it defaults correctly. The frontend might have a fallback.
+
 # For now, just build.
 RUN npm run build
 
