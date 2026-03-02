@@ -1,6 +1,22 @@
-version: '3.8'
-
 services:
+  db:
+    image: postgres:15-alpine
+    container_name: supportlens-db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=supportlens
+      - POSTGRES_USER=supportlens_user
+      - POSTGRES_PASSWORD=supportlens_pass
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: supportlens-frontend-builder
+    volumes:
+      - frontend_dist:/app/dist
+
   backend:
     build:
       context: ./backend
@@ -10,22 +26,16 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
+      - frontend_dist:/app/frontend_dist
     environment:
       - DEBUG=True
+      - DATABASE_URL=postgres://supportlens_user:supportlens_pass@db:5432/supportlens
     env_file:
       - ./backend/.env
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: supportlens-frontend
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules # prevents overriding node_modules inside the container
-    environment:
-      - VITE_API_URL=http://localhost:8000/api
     depends_on:
-      - backend
+      - db
+      - frontend
+
+volumes:
+  postgres_data:
+  frontend_dist:

@@ -4,29 +4,11 @@ import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
 
-CHATBOT_SYSTEM_PROMPT = settings.CHATBOT_SYSTEM_PROMPT
 
-CLASSIFICATION_PROMPT = settings.CLASSIFICATION_PROMPT
-# System prompt for the chatbot
-<<<<<<< Updated upstream
-CHATBOT_SYSTEM_PROMPT = """You are a friendly and helpful customer support agent for BillFlow, a SaaS billing platform.
-Answer clearly and professionally."""
+CHATBOT_SYSTEM_PROMPT = getattr(settings, 'CHATBOT_SYSTEM_PROMPT', "You are a customer support agent.")
+CLASSIFICATION_PROMPT = getattr(settings, 'CLASSIFICATION_PROMPT', "Classify the user message into a category.")
 
-# Strict system prompt for classification
-CLASSIFICATION_PROMPT = """You are a strict classifier. Categorize the user's message and the bot's response into EXACTLY ONE of the following 5 categories:
-- Billing
-- Refund
-- Account Access
-- Cancellation
-- General Inquiry
 
-User Message: {user_message}
-Bot Response: {bot_response}
-
-You must return ONLY the exact string from the 5 options above, with absolutely no other text, markdown, or punctuation."""
-
-=======
->>>>>>> Stashed changes
 
 def get_gemini_client():
     """Initializes the Gemini client if the API key is present."""
