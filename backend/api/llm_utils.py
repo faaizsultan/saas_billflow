@@ -13,7 +13,7 @@ CLASSIFICATION_PROMPT = getattr(settings, 'CLASSIFICATION_PROMPT', "Classify the
 def get_gemini_client():
     """Initializes the Gemini client if the API key is present."""
     api_key = getattr(settings, 'GOOGLE_API_KEY', None)
-    if api_key and api_key != "your_google_api_key_here":
+    if api_key and api_key not in ["your_google_api_key_here", "dummy"]:
         genai.configure(api_key=api_key)
         return True
     return False
@@ -22,7 +22,7 @@ def generate_chat_response(prompt: str) -> str:
     """Generates a chatbot response using Gemini."""
     if not get_gemini_client():
         logger.warning("GOOGLE_API_KEY not set or invalid. Returning fallback response.")
-        return "I am currently unable to answer that. Please contact support at support@billflow.com."
+        return "I cannot chat right now (LLM API Key missing). Please contact support at help@supportlens.com"
 
     try:
         model = genai.GenerativeModel('gemini-2.5-flash', system_instruction=CHATBOT_SYSTEM_PROMPT)
