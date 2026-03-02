@@ -9,8 +9,10 @@ RUN npm install
 # Copy project files
 COPY . .
 
-# Expose port 5173 for Vite
-EXPOSE 5173
 
-# Start Vite with host exposed
-CMD ["npm", "run", "dev", "--", "--host"]
+# For now, just build.
+RUN npm run build
+
+# We will mount the host or a docker volume to /app/dist so the files persist after build.
+# This CMD just outputs a message and exits.
+CMD ["echo", "Frontend build complete."]

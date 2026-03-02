@@ -2,9 +2,17 @@ import time
 from rest_framework import viewsets, mixins, views, status
 from rest_framework.response import Response
 from django.db.models import Count, Avg
+from django.conf import settings
 from .models import Trace
+from django.db import connection
+from django.db.utils import OperationalError, InterfaceError
 from .serializers import TraceSerializer, TraceCreateSerializer
 from .llm_utils import generate_chat_response, classify_trace
+import logging
+import google.generativeai as genai
+
+
+
 
 class TraceViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = Trace.objects.all()
@@ -72,3 +80,60 @@ class AnalyticsView(views.APIView):
             'average_response_time_ms': avg_response_time,
             'category_breakdown': breakdown
         })
+
+
+logger = logging.getLogger(__name__)
+START_TIME = time.time()
+
+class HealthView(views.APIView):
+    def get(self, request, *args, **kwargs):
+        uptime_seconds = int(time.time() - START_TIME)
+        
+        # 1. DB Probe
+        db_reachable = "reachable"
+        try:
+            connection.ensure_connection()
+        except (OperationalError, InterfaceError):
+            db_reachable = "unreachable"
+            
+        # 2. LLM Probe
+        llm_reachable = "reachable"
+        api_key = getattr(settings, 'GOOGLE_API_KEY', None)
+        
+        if not api_key or api_key in ["your_google_api_key_here", "dummy"]:
+            llm_reachable = "missing_key"
+        else:
+            try:
+                genai.configure(api_key=api_key)
+                # Extremely lightweight ping using flash model
+                model = genai.GenerativeModel('gemini-2.5-flash')
+                response = model.generate_content("ping", generation_config={"max_output_tokens": 1})
+            except Exception:
+                llm_reachable = "unreachable"
+                
+        # 3. Status Logic & Anti-Flood Logging
+        components_healthy = 0
+        if db_reachable == "reachable": components_healthy += 1
+        if llm_reachable == "reachable": components_healthy += 1
+        
+        if components_healthy == 2:
+            status_val = "Healthy"
+            http_status = status.HTTP_200_OK
+            logger.debug(f"Health check passed: status={status_val}, db={db_reachable}, llm={llm_reachable}")
+        elif components_healthy == 1:
+            status_val = "Degraded"
+            http_status = status.HTTP_200_OK
+            logger.warning(f"Health check degraded: status={status_val}, db={db_reachable}, llm={llm_reachable}")
+        else:
+            status_val = "Critical"
+            http_status = status.HTTP_503_SERVICE_UNAVAILABLE
+            logger.error(f"Health check critical: status={status_val}, db={db_reachable}, llm={llm_reachable}")
+            
+        return Response({
+            "status": status_val,
+            "uptime_seconds": uptime_seconds,
+            "components": {
+                "database": db_reachable,
+                "llm": llm_reachable
+            }
+        }, status=http_status)

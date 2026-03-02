@@ -8,8 +8,11 @@ class Command(BaseCommand):
     help = 'Seeds the database with initial Trace data'
 
     def handle(self, *args, **kwargs):
-        self.stdout.write('Clearing existing traces...')
-        Trace.objects.all().delete()
+        if Trace.objects.exists():
+            self.stdout.write('Database already seeded. Skipping...')
+            return
+
+        self.stdout.write('Seeding database...')
 
         seed_data = [
             {

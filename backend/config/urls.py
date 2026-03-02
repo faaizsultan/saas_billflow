@@ -15,9 +15,22 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
+from django.conf import settings
+from django.http import HttpResponse
+
+def serve_react_app(request):
+    try:
+        with open(settings.BASE_DIR / 'frontend_dist' / 'index.html', 'r') as f:
+            return HttpResponse(f.read(), content_type='text/html')
+    except FileNotFoundError:
+        return HttpResponse('Frontend build not found', status=404)
+
+from api.views import HealthView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
+    path('health', HealthView.as_view(), name='health'),
+    re_path(r'^(?!api/|health|admin/|static/).*$', serve_react_app),
 ]

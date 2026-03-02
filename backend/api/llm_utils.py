@@ -2,36 +2,18 @@ import logging
 from django.conf import settings
 import google.generativeai as genai
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('api.llm_utils')
 
-CHATBOT_SYSTEM_PROMPT = settings.CHATBOT_SYSTEM_PROMPT
 
-CLASSIFICATION_PROMPT = settings.CLASSIFICATION_PROMPT
-# System prompt for the chatbot
-<<<<<<< Updated upstream
-CHATBOT_SYSTEM_PROMPT = """You are a friendly and helpful customer support agent for BillFlow, a SaaS billing platform.
-Answer clearly and professionally."""
+CHATBOT_SYSTEM_PROMPT = getattr(settings, 'CHATBOT_SYSTEM_PROMPT', "You are a customer support agent.")
+CLASSIFICATION_PROMPT = getattr(settings, 'CLASSIFICATION_PROMPT', "Classify the user message into a category.")
 
-# Strict system prompt for classification
-CLASSIFICATION_PROMPT = """You are a strict classifier. Categorize the user's message and the bot's response into EXACTLY ONE of the following 5 categories:
-- Billing
-- Refund
-- Account Access
-- Cancellation
-- General Inquiry
 
-User Message: {user_message}
-Bot Response: {bot_response}
-
-You must return ONLY the exact string from the 5 options above, with absolutely no other text, markdown, or punctuation."""
-
-=======
->>>>>>> Stashed changes
 
 def get_gemini_client():
     """Initializes the Gemini client if the API key is present."""
     api_key = getattr(settings, 'GOOGLE_API_KEY', None)
-    if api_key and api_key != "your_google_api_key_here":
+    if api_key and api_key not in ["your_google_api_key_here", "dummy"]:
         genai.configure(api_key=api_key)
         return True
     return False
@@ -40,14 +22,14 @@ def generate_chat_response(prompt: str) -> str:
     """Generates a chatbot response using Gemini."""
     if not get_gemini_client():
         logger.warning("GOOGLE_API_KEY not set or invalid. Returning fallback response.")
-        return "I am currently unable to answer that. Please contact support at support@billflow.com."
+        return "I cannot chat right now (LLM API Key missing). Please contact support at help@supportlens.com"
 
     try:
         model = genai.GenerativeModel('gemini-2.5-flash', system_instruction=CHATBOT_SYSTEM_PROMPT)
         response = model.generate_content(prompt)
         return response.text.strip()
     except Exception as e:
-        logger.error(f"Error calling Gemini for chat response: {str(e)}")
+        logger.error("Error calling Gemini for chat response", extra={"llm_meta": {"error": str(e), "action": "chat", "prompt_preview": prompt[:50]}})
         return "Sorry, I am having trouble connecting to my brain right now. Please try again later."
 
 
@@ -75,10 +57,11 @@ def classify_trace(user_message: str, bot_response: str) -> str:
         
         if cleaned_category in valid_categories:
             return cleaned_category
+            return cleaned_category
         else:
-            logger.warning(f"Unrecognized category returned by LLM: {cleaned_category}")
+            logger.warning("Unrecognized category returned by LLM", extra={"llm_meta": {"returned_category": cleaned_category, "fallback": fallback_category}})
             return fallback_category
             
     except Exception as e:
-        logger.error(f"Error calling Gemini for classification: {str(e)}")
+        logger.error("Error calling Gemini for classification", extra={"llm_meta": {"error": str(e), "action": "classification"}})
         return fallback_category
