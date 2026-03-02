@@ -2,9 +2,17 @@ import time
 from rest_framework import viewsets, mixins, views, status
 from rest_framework.response import Response
 from django.db.models import Count, Avg
+from django.conf import settings
 from .models import Trace
+from django.db import connection
+from django.db.utils import OperationalError, InterfaceError
 from .serializers import TraceSerializer, TraceCreateSerializer
 from .llm_utils import generate_chat_response, classify_trace
+import logging
+import google.generativeai as genai
+
+
+
 
 class TraceViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = Trace.objects.all()
@@ -73,11 +81,6 @@ class AnalyticsView(views.APIView):
             'category_breakdown': breakdown
         })
 
-import logging
-from django.db import connection
-from django.db.utils import OperationalError, InterfaceError
-import google.generativeai as genai
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 START_TIME = time.time()
@@ -97,7 +100,7 @@ class HealthView(views.APIView):
         llm_reachable = "reachable"
         api_key = getattr(settings, 'GOOGLE_API_KEY', None)
         
-        if not api_key or api_key == "your_google_api_key_here":
+        if not api_key or api_key in ["your_google_api_key_here", "dummy"]:
             llm_reachable = "missing_key"
         else:
             try:
