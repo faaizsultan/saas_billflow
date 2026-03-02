@@ -26,8 +26,11 @@ def serve_react_app(request):
     except FileNotFoundError:
         return HttpResponse('Frontend build not found', status=404)
 
+from api.views import HealthView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
-    re_path(r'^(?!api/|admin/|static/).*$', serve_react_app),
+    path('health', HealthView.as_view(), name='health'),
+    re_path(r'^(?!api/|health|admin/|static/).*$', serve_react_app),
 ]
