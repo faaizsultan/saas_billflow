@@ -65,7 +65,6 @@ jobs:
       - name: Run Django Tests (Mocked LLM)
         working-directory: ./backend
         run: python manage.py test
-        # Note: True tests are being implemented in Phase 5.
         # Running manage.py test succeeds exit code 0 if 0 tests exist, keeping CI green.
 
   e2e-tests:
@@ -79,6 +78,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Create CI environment file
+        run: |
+          echo "GOOGLE_API_KEY=${GOOGLE_API_KEY}" > backend/.env
+          echo "SECRET_KEY=${SECRET_KEY}" >> backend/.env
+          echo "DEBUG=${DEBUG}" >> backend/.env
+          
       - name: Build and start Docker containers
         run: docker compose up -d --build
         

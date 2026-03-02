@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
 from django.http import HttpResponse
+from api.views import HealthView
 
 def serve_react_app(request):
     try:
@@ -26,7 +27,7 @@ def serve_react_app(request):
     except FileNotFoundError:
         return HttpResponse('Frontend build not found', status=404)
 
-from api.views import HealthView
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
