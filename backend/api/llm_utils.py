@@ -2,7 +2,7 @@ import logging
 from django.conf import settings
 import google.generativeai as genai
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('api.llm_utils')
 
 
 CHATBOT_SYSTEM_PROMPT = getattr(settings, 'CHATBOT_SYSTEM_PROMPT', "You are a customer support agent.")
@@ -29,7 +29,7 @@ def generate_chat_response(prompt: str) -> str:
         response = model.generate_content(prompt)
         return response.text.strip()
     except Exception as e:
-        logger.error(f"Error calling Gemini for chat response: {str(e)}")
+        logger.error("Error calling Gemini for chat response", extra={"llm_meta": {"error": str(e), "action": "chat", "prompt_preview": prompt[:50]}})
         return "Sorry, I am having trouble connecting to my brain right now. Please try again later."
 
 
@@ -57,10 +57,11 @@ def classify_trace(user_message: str, bot_response: str) -> str:
         
         if cleaned_category in valid_categories:
             return cleaned_category
+            return cleaned_category
         else:
-            logger.warning(f"Unrecognized category returned by LLM: {cleaned_category}")
+            logger.warning("Unrecognized category returned by LLM", extra={"llm_meta": {"returned_category": cleaned_category, "fallback": fallback_category}})
             return fallback_category
             
     except Exception as e:
-        logger.error(f"Error calling Gemini for classification: {str(e)}")
+        logger.error("Error calling Gemini for classification", extra={"llm_meta": {"error": str(e), "action": "classification"}})
         return fallback_category
